@@ -22,6 +22,9 @@ from calvin_env.utils.utils import FpsController, get_git_commit_hash
 
 # A logger for this file
 log = logging.getLogger(__name__)
+from rich.traceback import install
+
+# install(show_locals=True)
 
 
 class PlayTableSimEnv(gym.Env):
@@ -279,10 +282,10 @@ def get_env(dataset_path, obs_space=None, show_gui=True, **kwargs):
             del render_conf.cameras[k]
     if "scene" in kwargs:
         scene_cfg = OmegaConf.load(Path(calvin_env.__file__).parents[1] / "conf/scene" / f"{kwargs['scene']}.yaml")
-        render_conf.scene = scene_cfg
+        OmegaConf.merge(render_conf, scene_cfg)
     if not hydra.core.global_hydra.GlobalHydra.instance().is_initialized():
         hydra.initialize(".")
-    env = hydra.utils.instantiate(render_conf.env, show_gui=show_gui, use_vr=False, use_scene_info=True)
+    env = hydra.utils.instantiate(render_conf.env, show_gui=show_gui, use_vr=False, use_scene_info=True, **kwargs)
     return env
 
 
@@ -292,16 +295,7 @@ def run_env(cfg):
 
     env.reset()
     while True:
-        action = {"action": np.array((0., 0, 0, 0, 0, 0, 1)),
-                  "type": "cartesian_rel"}
-        # cartesian actions can also be input directly as numpy arrays
-        # action = np.array((0., 0, 0, 0, 0, 0, 1))
-
-        # relative action in joint space
-        # action = {"action": np.array((0., 0, 0, 0, 0, 0, 0, 1)),
-        #           "type": "joint_rel"}
-
-        env.step(action)
+        env.step(np.array((0.0, 0, 0, 0, 0, 1)))
         # env.render()
         time.sleep(0.01)
 
